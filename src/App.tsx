@@ -1,61 +1,44 @@
-import { useState } from 'react';
-import classNames from 'classnames';
-import { ReactComponent as ReactLogo } from './assets/react.svg';
-import { ReactComponent as ViteLogo } from './assets/vite.svg';
-import { ReactComponent as TypescriptLogo } from './assets/typescript.svg';
-import { ReactComponent as ScssLogo } from './assets/scss.svg';
+import { useRef, useEffect, useState } from 'react';
+import mapboxgl, { Map } from 'mapbox-gl';
 import styles from './App.module.scss';
 
-function App() {
-    const [count, setCount] = useState(0);
+mapboxgl.accessToken =
+    'pk.eyJ1IjoidG9tcmF2IiwiYSI6ImNscTlrYTdqNzE5Z3oyanM5bWhrOGF0MTcifQ.PdEl6CYehj2UrSA4GMEvsQ';
+
+export default function App() {
+    const mapContainer = useRef(null);
+    const map = useRef<Map | null>(null);
+    const [lng, setLng] = useState(-70.9);
+    const [lat, setLat] = useState(42.35);
+    const [zoom, setZoom] = useState(9);
+
+    useEffect(() => {
+        if (map.current) return; // initialize map only once
+
+        if (mapContainer.current) {
+            map.current = new mapboxgl.Map({
+                container: mapContainer.current,
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: [lng, lat],
+                zoom: zoom,
+            });
+
+            map.current.on('move', () => {
+                if (map.current) {
+                    setLng(Number(map.current.getCenter().lng.toFixed(4)));
+                    setLat(Number(map.current.getCenter().lat.toFixed(4)));
+                    setZoom(Number(map.current.getZoom().toFixed(2)));
+                }
+            });
+        }
+    });
 
     return (
-        <div className={styles.App}>
-            <div>
-                <a href="https://vitejs.dev" target="_blank">
-                    <ViteLogo
-                        height="6em"
-                        width="6em"
-                        className={classNames(styles.logo)}
-                        title="Vite logo"
-                    />
-                </a>
-                <a href="https://reactjs.org" target="_blank">
-                    <ReactLogo
-                        height="6em"
-                        width="6em"
-                        className={classNames(styles.logo, styles.react)}
-                        title="React logo"
-                    />
-                </a>
-                <a href="https://www.typescriptlang.org/" target="_blank">
-                    <TypescriptLogo
-                        height="6em"
-                        width="6em"
-                        className={classNames(styles.logo, styles.ts)}
-                        title="Typescript logo"
-                    />
-                </a>
-                <a href="https://sass-lang.com/" target="_blank">
-                    <ScssLogo
-                        height="6em"
-                        width="6em"
-                        className={classNames(styles.logo, styles.scss)}
-                        title="SCSS logo"
-                    />
-                </a>
+        <div>
+            <div className={styles.sidebar}>
+                Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
             </div>
-            <div className={styles.card}>
-                <button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
-                <p>
-                    Edit <code>src/App.tsx</code> and save to test HMR
-                </p>
-            </div>
-            <p className={styles['read-the-docs']}>
-                Click on the Vite and React logos to learn more
-            </p>
+            <div ref={mapContainer} className={styles.mapContainer} />
         </div>
     );
 }
-
-export default App;
